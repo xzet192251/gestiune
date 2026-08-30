@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestiune</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f6f8;
+      color: #222;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    header {
+      background: #1f2937;
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin-bottom: 5px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .card strong {
+      font-size: 25px;
+    }
+
+    .form {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .form h2 {
+      margin-bottom: 15px;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 10px;
+    }
+
+    input, button {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 15px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .sell {
+      background: #16a34a;
+    }
+
+    .search {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background: #1f2937;
+      color: white;
+    }
+
+    .stock-mic {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    .actiuni {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 800px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .inputs {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>📦 Gestiune</h1>
+    <p>Administrare produse, stoc și vânzări</p>
+  </header>
+
+  <div class="stats">
+
+    <div class="card">
+      <h3>Produse</h3>
+      <strong id="totalProduse">0</strong>
+    </div>
+
+    <div class="card">
+      <h3>Valoare stoc</h3>
+      <strong id="valoareStoc">0 lei</strong>
+    </div>
+
+    <div class="card">
+      <h3>Profit estimat</h3>
+      <strong id="profit">0 lei</strong>
+    </div>
+
+  </div>
+
+  <div class="form">
+
+    <h2>➕ Adaugă produs</h2>
+
+    <div class="inputs">
+
+      <input id="nume" placeholder="Numele produsului">
+
+      <input id="cantitate" type="number" placeholder="Cantitate">
+
+      <input id="cumparare" type="number" step="0.01" placeholder="Preț cumpărare">
+
+      <input id="vanzare" type="number" step="0.01" placeholder="Preț vânzare">
+
+      <button onclick="adaugaProdus()">Adaugă</button>
+
+    </div>
+
+  </div>
+
+  <input
+    class="search"
+    id="cautare"
+    placeholder="🔎 Caută un produs..."
+    oninput="afiseazaProduse()"
+  >
+
+  <table>
+
+    <thead>
+      <tr>
+        <th>Produs</th>
+        <th>Stoc</th>
+        <th>Cumpărare</th>
+        <th>Vânzare</th>
+        <th>Profit/buc.</th>
+        <th>Acțiuni</th>
+      </tr>
+    </thead>
+
+    <tbody id="listaProduse"></tbody>
+
+  </table>
+
+</div>
+
+<script>
+
+let produse = JSON.parse(localStorage.getItem("produse")) || [];
+
+function salveaza() {
+  localStorage.setItem("produse", JSON.stringify(produse));
+}
+
+function adaugaProdus() {
+
+  const nume = document.getElementById("nume").value.trim();
+  const cantitate = Number(document.getElementById("cantitate").value);
+  const cumparare = Number(document.getElementById("cumparare").value);
+  const vanzare = Number(document.getElementById("vanzare").value);
+
+  if (!nume || cantitate <= 0 || cumparare < 0 || vanzare < 0) {
+    alert("Completează corect toate câmpurile!");
+    return;
+  }
+
+  produse.push({
+    id: Date.now(),
+    nume,
+    cantitate,
+    cumparare,
+    vanzare
+  });
+
+  salveaza();
+
+  document.getElementById("nume").value = "";
+  document.getElementById("cantitate").value = "";
+  document.getElementById("cumparare").value = "";
+  document.getElementById("vanzare").value = "";
+
+  afiseazaProduse();
+}
+
+function vinde(id) {
+
+  const produs = produse.find(p => p.id === id);
+
+  if (!produs) return;
+
+  if (produs.cantitate <= 0) {
+    alert("Nu mai există acest produs în stoc!");
+    return;
+  }
+
+  produs.cantitate--;
+
+  salveaza();
+  afiseazaProduse();
+}
+
+function sterge(id) {
+
+  if (!confirm("Sigur vrei să ștergi acest produs?")) {
+    return;
+  }
+
+  produse = produse.filter(p => p.id !== id);
+
+  salveaza();
+  afiseazaProduse();
+}
+
+function afiseazaProduse() {
+
+  const lista = document.getElementById("listaProduse");
+  const cautare = document.getElementById("cautare").value.toLowerCase();
+
+  lista.innerHTML = "";
+
+  const filtrate = produse.filter(p =>
+    p.nume.toLowerCase().includes(cautare)
+  );
+
+  filtrate.forEach(p => {
+
+    const profit = p.vanzare - p.cumparare;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${p.nume}</td>
+
+      <td class="${p.cantitate <= 5 ? 'stock-mic' : ''}">
+        ${p.cantitate}
+        ${p.cantitate <= 5 ? ' ⚠️' : ''}
+      </td>
+
+      <td>${p.cumparare.toFixed(2)} lei</td>
+
+      <td>${p.vanzare.toFixed(2)} lei</td>
+
+      <td>${profit.toFixed(2)} lei</td>
+
+      <td>
+        <div class="actiuni">
+          <button class="sell" onclick="vinde(${p.id})">
+            Vinde 1
+          </button>
+
+          <button class="danger" onclick="sterge(${p.id})">
+            Șterge
+          </button>
+        </div>
+      </td>
+    `;
+
+    lista.appendChild(tr);
+  });
+
+  actualizeazaStatistici();
+}
+
+function actualizeazaStatistici() {
+
+  document.getElementById("totalProduse").textContent =
+    produse.length;
+
+  const valoare = produse.reduce(
+    (total, p) => total + (p.cantitate * p.cumparare),
+    0
+  );
+
+  const profit = produse.reduce(
+    (total, p) => total + (p.cantitate * (p.vanzare - p.cumparare)),
+    0
+  );
+
+  document.getElementById("valoareStoc").textContent =
+    valoare.toFixed(2) + " lei";
+
+  document.getElementById("profit").textContent =
+    profit.toFixed(2) + " lei";
+}
+
+afiseazaProduse();
+
+</script>
+
+</body>
+</html>
